@@ -40,10 +40,10 @@ app.use((req, res, next) => {
 });
 
 app.use(bodyParser.json());
-app.use(cors({
-  origin: 'http://localhost:3000',
-  optionsSuccessStatus: 200
-}));
+// app.use(cors({
+//   origin: 'http://localhost:3000',
+//   optionsSuccessStatus: 200
+// }));
 
 app.use('/api', routes);
 app.use('/auth', authRoutes);
