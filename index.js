@@ -8,7 +8,7 @@ require('dotenv').config();
 //import routes
 const routes = require('./routes/api');
 const authRoutes = require('./routes/auth');
-const { db } = require('./models/User');
+const { db } = require('./models/user');
 
 const app = express();
 
