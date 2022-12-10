@@ -1,5 +1,4 @@
-const { StatusCodes } = require("http-status-codes");
-const User = require('../models/user');
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const {
@@ -68,58 +67,55 @@ exports.signup = (req, res, next) => {
   })
 }
 
-exports.signin = async (req, res) => {
-  const { username, email, password } = req.body;
-
-  if ((!username && !email) || !password) {
-    throw new BadRequestError("Please Provide All the Values");
-  }
-
-  const isUser = await User.findOne({
-    $or: [{ email: email }, { username: username }],
-  });
-
-  if (!isUser) {
-    throw new NotFoundError("Invalid Credentials");
-  }
-
-  //compare password
-  const comparePassword = await bcrypt.compare(password, isUser.password);
-
-  if (!comparePassword) {
-    throw new BadRequestError(
-      "Please Make Sure You have entered Correct Password!"
-    );
-  }
-
-  const token = jwt.sign(
-    {
-      userId: isUser._id,
-      username: isUser.username,
-      userEmail: isUser.email,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_LIFETIME,
-    }
-  );
-
-  res.status(StatusCodes.OK).json({
-    _id: isUser._id,
-    username: isUser.username,
-    email: isUser.email,
-    avatar: isUser.avatar,
-    token,
-  });
-};
-
-exports.searchUser = async (req, res) => {
-  const search = req.query.search;
-
-  console.log(search);
-  const user = await User.find({
-    username: { $regex: search, $options: "i" },
-  }).select("username avatar _id email bio");
-
-  res.status(StatusCodes.OK).json(user);
-};
+exports.signin = (req, res) => {
+     let { email, password } = req.body;
+     let errors = [];
+     if (!email) {
+       errors.push({ email: "required" });
+     }
+     if (!emailRegexp.test(email)) {
+       errors.push({ email: "invalid email" });
+     }
+     if (!password) {
+       errors.push({ passowrd: "required" });
+     }
+     if (errors.length > 0) {
+      console.log(errors)
+      return res.status(422).json({ errors: errors });
+     }
+     User.findOne({ email: email }).then(user => {
+        if (!user) {
+          return res.status(404).json({
+            errors: [{ user: "not found" }],
+          });
+        } else {
+           bcrypt.compare(password, user.password).then(isMatch => {
+              if (!isMatch) {
+               return res.status(400).json({ errors: [{ password: "incorrect" }] 
+               });
+              }
+       let access_token = createJWT(
+          user.email,
+          user._id,
+          3600
+       );
+       jwt.verify(access_token, process.env.TOKEN_SECRET, (err, decoded) => {
+         if (err) {
+            res.status(500).json({ errors: err });
+         }
+         if (decoded) {
+             return res.status(200).json({
+                success: true,
+                token: access_token,
+                message: user
+             });
+           }
+         });
+        }).catch(err => {
+          res.status(500).json({ errors: err });
+        });
+      }
+   }).catch(err => {
+      res.status(500).json({ errors: err });
+   });
+}
