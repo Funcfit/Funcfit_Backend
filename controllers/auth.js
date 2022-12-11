@@ -7,7 +7,7 @@ const {
 const emailRegexp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 exports.signup = (req, res, next) => {
-  let { username, email, password, password_confirmation } = req.body;
+  let { username, email, password, password_confirmation, user_type } = req.body;
   let errors = [];
   if (!username) {
     errors.push({ username: "required" });
@@ -26,6 +26,9 @@ exports.signup = (req, res, next) => {
      password_confirmation: "required",
     });
   }
+  if(!user_type){
+    user_type = "member";
+  }
   if (password != password_confirmation) {
     errors.push({ password: "mismatch" });
   }
@@ -41,6 +44,7 @@ exports.signup = (req, res, next) => {
            username: username,
            email: email,
            password: password,
+           user_type: user_type,
          });
  bcrypt.genSalt(10, function(err, salt) { bcrypt.hash(password, salt, function(err, hash) {
          if (err) throw err;

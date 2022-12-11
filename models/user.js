@@ -15,6 +15,11 @@ const UserSchema = new Schema({
  password: {
     type: String,
     required: true
+ },
+ user_type:{
+  type: String,
+  default: 'member',
+  required: false
  }
 },{
  timestamps: true,
